@@ -11,7 +11,7 @@
       --bg: #0a0a0f; --surface: #111118; --card: #181825; --border: #1e1e2e;
       --accent: #7fff6e; --blue: #6e9fff; --red: #ff5f5f; --yellow: #ffcc44;
       --text: #d0d0e0; --muted: #555568;
-      --fs: 15px;
+      --fs: 20px;
     }
     body.light {
       --bg: #f0f0f5; --surface: #e4e4ee; --card: #dcdce8; --border: #c8c8d8;
@@ -48,7 +48,7 @@
        [YT area] [members 200px] [chat flex]
        [cam row] [members     ] [chat     ]
     ─── */
-    #app { display:none; height:100vh; grid-template-columns: 1fr 190px minmax(260px,340px); grid-template-rows: 46px 1fr 150px; }
+    #app { display:none; height:100vh; grid-template-columns: 1fr 150px minmax(380px,500px); grid-template-rows: 46px 1fr 150px; }
     #app.show { display:grid; }
 
     /* ── HEADER ── */
@@ -186,7 +186,7 @@
       <!-- Font size -->
       <div class="fs-ctrl">
         <button class="fs-btn" onclick="changeFontSize(-1)">A−</button>
-        <span class="fs-val" id="fsVal">15</span>
+        <span class="fs-val" id="fsVal">20</span>
         <button class="fs-btn" onclick="changeFontSize(1)">A+</button>
       </div>
       <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀️</button>
@@ -289,7 +289,7 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
 }
 
-let fontSize = 15;
+let fontSize = 20;
 function changeFontSize(delta) {
   fontSize = Math.min(22, Math.max(11, fontSize + delta));
   document.documentElement.style.setProperty('--fs', fontSize + 'px');
