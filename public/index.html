@@ -48,7 +48,18 @@
        [YT area] [members 200px] [chat flex]
        [cam row] [members     ] [chat     ]
     ─── */
-    #app { display:none; height:100vh; grid-template-columns: 1fr 160px minmax(0,1fr); grid-template-rows: 46px 1fr 150px; }
+    #app { display:none; height:100vh; grid-template-columns: 40% 10% 50%; grid-template-rows: 46px 1fr 150px; }
+
+    /* Tablette */
+    @media (max-width: 900px) {
+      #app { grid-template-columns: 35% 15% 50%; grid-template-rows: 46px 1fr 130px; }
+    }
+    /* Mobile */
+    @media (max-width: 600px) {
+      #app { grid-template-columns: 0px 0px 100%; grid-template-rows: 46px 1fr 100px; }
+      #yt-area, #members-panel { display: none; }
+      #cam-row { display: none; }
+    }
     #app.show { display:grid; }
 
     /* ── HEADER ── */
