@@ -11,7 +11,7 @@
       --bg: #0a0a0f; --surface: #111118; --card: #181825; --border: #1e1e2e;
       --accent: #cc2222; --blue: #6e9fff; --red: #cc2222; --yellow: #ffcc44;
       --text: #d0d0e0; --muted: #555568;
-      --fs: 20px;
+      --fs: clamp(14px, 1.1vw, 22px);
     }
     body.light {
       --bg: #f0f0f5; --surface: #e4e4ee; --card: #dcdce8; --border: #c8c8d8;
@@ -26,11 +26,11 @@
        [YT area] [members 200px] [chat flex]
        [cam row] [members     ] [chat     ]
     ─── */
-    #app { display:none; height:100vh; grid-template-columns: 10% 50% 40%; grid-template-rows: 46px 1fr 225px; }
+    #app { display:none; height:100vh; grid-template-columns: 10% 50% 40%; grid-template-rows: clamp(40px, 4vh, 56px) 1fr clamp(160px, 20vh, 260px); }
 
     /* Tablette */
     @media (max-width: 900px) {
-      #app { grid-template-columns: 0% 60% 40%; grid-template-rows: 46px 1fr 130px; }
+      #app { grid-template-columns: 0% 60% 40%; grid-template-rows: clamp(40px, 4vh, 56px) 1fr clamp(110px, 15vh, 160px); }
       #members-panel { display: none; }
     }
     /* Mobile */
@@ -258,9 +258,9 @@ function toggleTheme() {
   document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
 }
 
-let fontSize = 20;
+let fontSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fs')) || 16;
 function changeFontSize(delta) {
-  fontSize = Math.min(22, Math.max(11, fontSize + delta));
+  fontSize = Math.min(28, Math.max(12, fontSize + delta));
   document.documentElement.style.setProperty('--fs', fontSize + 'px');
   document.getElementById('fsVal').textContent = fontSize;
 }
