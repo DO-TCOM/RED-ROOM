@@ -105,6 +105,73 @@ io.on('connection', (socket) => {
     }
   });
 
+  // WebRTC signaling
+  socket.on('webrtc-offer', ({ to, offer }) => {
+    try {
+      io.to(to).emit('webrtc-offer', { from: socket.id, offer });
+    } catch (error) {
+      console.error('Error in webrtc-offer:', error);
+    }
+  });
+
+  socket.on('webrtc-answer', ({ to, answer }) => {
+    try {
+      io.to(to).emit('webrtc-answer', { from: socket.id, answer });
+    } catch (error) {
+      console.error('Error in webrtc-answer:', error);
+    }
+  });
+
+  socket.on('webrtc-ice', ({ to, candidate }) => {
+    try {
+      io.to(to).emit('webrtc-ice', { from: socket.id, candidate });
+    } catch (error) {
+      console.error('Error in webrtc-ice:', error);
+    }
+  });
+
+  socket.on('webrtc-hangup', ({ to }) => {
+    try {
+      io.to(to).emit('webrtc-hangup', { from: socket.id });
+    } catch (error) {
+      console.error('Error in webrtc-hangup:', error);
+    }
+  });
+
+  // Media state changes
+  socket.on('mediaState', ({ videoOn, micOn }) => {
+    try {
+      if (!currentRoom) return;
+      const room = rooms[currentRoom];
+      if (!room) return;
+      
+      const user = room.users[socket.id];
+      if (!user) return;
+      
+      user.videoOn = videoOn;
+      user.micOn = micOn;
+      
+      socket.to(currentRoom).emit('peerMediaState', {
+        id: socket.id,
+        videoOn,
+        micOn
+      });
+      
+      io.to(currentRoom).emit('userList',
+        Object.entries(room.users).map(([id, u]) => ({
+          id,
+          username: u.username,
+          videoOn: u.videoOn,
+          micOn: u.micOn,
+          isAdmin: u.isAdmin
+        }))
+      );
+      
+    } catch (error) {
+      console.error('Error in mediaState:', error);
+    }
+  });
+
   socket.on('message', (text) => {
     try {
       if (!currentRoom) return;
