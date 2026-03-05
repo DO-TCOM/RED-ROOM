@@ -301,12 +301,13 @@ const fmtTime = s => { s=Math.floor(s||0); return `${Math.floor(s/60)}:${String(
 const scrollChat = () => { const c=document.getElementById('panel-chat'); c.scrollTop=c.scrollHeight; };
 
 // ══════════════════════════════════════
-// AUTO JOIN
+// AUTO JOIN ROOM
 // ══════════════════════════════════════
 socket.on('connect', () => { 
   myId = socket.id; 
-  // Rejoint automatiquement avec pseudo vide pour génération aléatoire
-  socket.emit('join', { username: '', password: '' });
+  // Extrait le nom de la room depuis l'URL
+  const roomName = window.location.pathname.replace(/^\//, '') || 'default';
+  socket.emit('joinRoom', roomName);
 });
 socket.on('joinOk', ({ username, isAdmin }) => {
   myName = username;
