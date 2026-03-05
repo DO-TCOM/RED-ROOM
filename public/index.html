@@ -30,14 +30,14 @@
       display: flex; flex-direction: column; gap: 14px; width: 320px; animation: popIn .25s ease;
     }
     @keyframes popIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
-    .modal-logo { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--accent); letter-spacing:-1px; text-align:center; }
+    .modal-logo { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:#cc2222; letter-spacing:-1px; text-align:center; text-shadow: 0 0 30px rgba(200,30,30,.3); }
     .modal-sub { font-size:.62rem; color:var(--muted); letter-spacing:3px; text-transform:uppercase; text-align:center; }
-    .modal-label { font-size:.62rem; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
-    .modal-input { background:var(--card); border:1px solid var(--border); color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:.95rem; padding:12px 14px; outline:none; width:100%; transition:border-color .2s; }
-    .modal-input:focus { border-color:var(--accent); }
-    .modal-input::placeholder { color:var(--muted); }
+    .modal-label { font-size:.62rem; color:#cc2222; letter-spacing:2px; text-transform:uppercase; }
+    .modal-input { background:var(--card); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.95rem; padding:12px 14px; outline:none; width:100%; transition:border-color .2s; caret-color:#cc2222; }
+    .modal-input:focus { border-color:#cc2222; }
+    .modal-input::placeholder { color:#cc2222; opacity:.5; font-size:.75rem; letter-spacing:1px; }
     .modal-error { font-size:.68rem; color:var(--red); min-height:16px; }
-    .modal-btn { background:var(--accent); color:var(--bg); border:none; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:12px; cursor:pointer; transition:opacity .2s; }
+    .modal-btn { background:#cc2222; color:#fff; border:none; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:12px; cursor:pointer; transition:opacity .2s; }
     .modal-btn:hover { opacity:.85; }
     .modal-flags { display:flex; gap:8px; justify-content:center; }
     .flag-btn { background:none; border:1px solid var(--border); cursor:pointer; font-size:1.2rem; padding:3px 7px; transition:border-color .15s; }
@@ -48,7 +48,7 @@
        [YT area] [members 200px] [chat flex]
        [cam row] [members     ] [chat     ]
     ─── */
-    #app { display:none; height:100vh; grid-template-columns: 10% 50% 40%; grid-template-rows: 46px 1fr 150px; }
+    #app { display:none; height:100vh; grid-template-columns: 10% 50% 40%; grid-template-rows: 46px 1fr 225px; }
 
     /* Tablette */
     @media (max-width: 900px) {
@@ -141,9 +141,9 @@
     .msg-text { font-size:.88rem; line-height:1.55; word-break:break-word; }
     .sys-msg { align-self:center; font-size:.6rem; color:var(--yellow); padding:3px 10px; border:1px solid rgba(255,204,68,.15); background:rgba(255,204,68,.03); animation:mIn .2s ease; text-align:center; margin:2px 0; }
     .chat-hint { font-size:.55rem; color:var(--muted); padding:3px 14px; border-top:1px solid var(--border); flex-shrink:0; }
-    .chat-input-area { padding:9px 12px; border-top:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:6px; flex-shrink:0; transition:background .3s; }
+    .chat-input-area { padding:14px 12px; border-top:1px solid var(--border); background:var(--surface); display:flex; align-items:center; gap:6px; flex-shrink:0; transition:background .3s; }
     .chat-prompt { color:var(--accent); font-size:.85rem; opacity:.5; }
-    .chat-inp { flex:1; background:transparent; border:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.88rem; outline:none; caret-color:var(--accent); }
+    .chat-inp { flex:1; background:transparent; border:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:1rem; outline:none; caret-color:var(--accent); }
     .chat-inp::placeholder { color:var(--muted); }
     .send-btn { background:var(--accent); color:var(--bg); border:none; font-family:'JetBrains Mono',monospace; font-size:.6rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:6px 10px; cursor:pointer; transition:opacity .2s; }
     .send-btn:hover { opacity:.8; }
@@ -153,7 +153,7 @@
     #cam-row::-webkit-scrollbar { height:3px; }
     #cam-row::-webkit-scrollbar-thumb { background:var(--border); }
     #cam-tiles { display:flex; gap:6px; padding:6px; flex:1; }
-    .video-tile { position:relative; background:var(--card); border:1px solid var(--border); overflow:hidden; width:120px; flex-shrink:0; display:flex; align-items:center; justify-content:center; min-height:90px; }
+    .video-tile { position:relative; background:var(--card); border:1px solid var(--border); overflow:hidden; width:180px; flex-shrink:0; display:flex; align-items:center; justify-content:center; min-height:140px; }
     .video-tile video { width:100%; height:100%; object-fit:cover; display:block; }
     .cam-off { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; background:var(--card); }
     .cam-off-av { width:32px; height:32px; background:var(--border); display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; color:var(--blue); }
@@ -175,7 +175,7 @@
 <!-- MODAL PSEUDO -->
 <div id="modal">
   <div class="modal-box">
-    <div class="modal-logo">CHAT<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
+    <div class="modal-logo">RED<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
     <div class="modal-sub" data-i18n="loginSub">vidéo · micro · youtube</div>
     <div class="modal-label" data-i18n="pseudoLabel">Ton pseudo</div>
     <input class="modal-input" id="uname" type="text" maxlength="20" autocomplete="off"/>
@@ -269,9 +269,9 @@
 // I18N
 // ══════════════════════════════════════
 const LANGS = {
-  fr: { loginSub:'vidéo · micro · youtube', pseudoLabel:'Ton pseudo', pseudoPlaceholder:'ex: alice', joinBtn:'→ Rejoindre', connected:'connecté', members:'Membres', playlist:'Playlist', chatPlaceholder:'Message ou !ytb …', chatHint:'!ytb [lien] pour ajouter une vidéo', ytbEmpty:'Aucune vidéo\nTape !ytb [lien YouTube] dans le chat\n(max 5)', ytbEmptyPlaylist:'Vide · utilise !ytb', you:'(toi)', errTaken:'Pseudo déjà utilisé !', errLength:'2 à 20 caractères.', sysJoined:'a rejoint', sysLeft:'a quitté', sysYtbAdded:'a ajouté une vidéo', sysYtbRemoved:'a retiré une vidéo', sysYtbNext:'vidéo suivante', sysYtbPrev:'vidéo précédente', sysYtbSelect:'a changé de vidéo', sysYtbInvalid:'❌ Lien invalide.', sysYtbFull:'❌ Playlist pleine (max 5).', online:'en ligne', lightMode:'Clair', darkMode:'Sombre' },
-  en: { loginSub:'video · mic · youtube', pseudoLabel:'Your username', pseudoPlaceholder:'e.g. alice', joinBtn:'→ Join', connected:'connected', members:'Members', playlist:'Playlist', chatPlaceholder:'Message or !ytb …', chatHint:'!ytb [link] to add a video', ytbEmpty:'No video\nType !ytb [YouTube link] in chat\n(max 5)', ytbEmptyPlaylist:'Empty · use !ytb', you:'(you)', errTaken:'Username already taken!', errLength:'2 to 20 characters.', sysJoined:'joined', sysLeft:'left', sysYtbAdded:'added a video', sysYtbRemoved:'removed a video', sysYtbNext:'next video', sysYtbPrev:'previous video', sysYtbSelect:'changed video', sysYtbInvalid:'❌ Invalid link.', sysYtbFull:'❌ Playlist full (max 5).', online:'online', lightMode:'Light', darkMode:'Dark' },
-  es: { loginSub:'video · micro · youtube', pseudoLabel:'Tu nombre', pseudoPlaceholder:'ej: alice', joinBtn:'→ Entrar', connected:'conectado', members:'Miembros', playlist:'Lista', chatPlaceholder:'Mensaje o !ytb …', chatHint:'!ytb [enlace] para añadir video', ytbEmpty:'Sin video\nEscribe !ytb [enlace YouTube]\n(máx 5)', ytbEmptyPlaylist:'Vacía · usa !ytb', you:'(tú)', errTaken:'¡Nombre ya en uso!', errLength:'2 a 20 caracteres.', sysJoined:'entró', sysLeft:'salió', sysYtbAdded:'añadió un video', sysYtbRemoved:'eliminó un video', sysYtbNext:'siguiente video', sysYtbPrev:'video anterior', sysYtbSelect:'cambió video', sysYtbInvalid:'❌ Enlace inválido.', sysYtbFull:'❌ Lista llena (máx 5).', online:'en línea', lightMode:'Claro', darkMode:'Oscuro' }
+  fr: { loginSub:'vidéo · micro · youtube', pseudoLabel:'Ton pseudo', pseudoPlaceholder:'nickname', joinBtn:'→ Rejoindre', connected:'connecté', members:'Membres', playlist:'Playlist', chatPlaceholder:'Message ou !ytb …', chatHint:'!ytb [lien] pour ajouter une vidéo', ytbEmpty:'Aucune vidéo\nTape !ytb [lien YouTube] dans le chat\n(max 5)', ytbEmptyPlaylist:'Vide · utilise !ytb', you:'(toi)', errTaken:'Pseudo déjà utilisé !', errLength:'2 à 20 caractères.', sysJoined:'a rejoint', sysLeft:'a quitté', sysYtbAdded:'a ajouté une vidéo', sysYtbRemoved:'a retiré une vidéo', sysYtbNext:'vidéo suivante', sysYtbPrev:'vidéo précédente', sysYtbSelect:'a changé de vidéo', sysYtbInvalid:'❌ Lien invalide.', sysYtbFull:'❌ Playlist pleine (max 5).', online:'en ligne', lightMode:'Clair', darkMode:'Sombre' },
+  en: { loginSub:'video · mic · youtube', pseudoLabel:'Your username', pseudoPlaceholder:'nickname', joinBtn:'→ Join', connected:'connected', members:'Members', playlist:'Playlist', chatPlaceholder:'Message or !ytb …', chatHint:'!ytb [link] to add a video', ytbEmpty:'No video\nType !ytb [YouTube link] in chat\n(max 5)', ytbEmptyPlaylist:'Empty · use !ytb', you:'(you)', errTaken:'Username already taken!', errLength:'2 to 20 characters.', sysJoined:'joined', sysLeft:'left', sysYtbAdded:'added a video', sysYtbRemoved:'removed a video', sysYtbNext:'next video', sysYtbPrev:'previous video', sysYtbSelect:'changed video', sysYtbInvalid:'❌ Invalid link.', sysYtbFull:'❌ Playlist full (max 5).', online:'online', lightMode:'Light', darkMode:'Dark' },
+  es: { loginSub:'video · micro · youtube', pseudoLabel:'Tu nombre', pseudoPlaceholder:'nickname', joinBtn:'→ Entrar', connected:'conectado', members:'Miembros', playlist:'Lista', chatPlaceholder:'Mensaje o !ytb …', chatHint:'!ytb [enlace] para añadir video', ytbEmpty:'Sin video\nEscribe !ytb [enlace YouTube]\n(máx 5)', ytbEmptyPlaylist:'Vacía · usa !ytb', you:'(tú)', errTaken:'¡Nombre ya en uso!', errLength:'2 a 20 caracteres.', sysJoined:'entró', sysLeft:'salió', sysYtbAdded:'añadió un video', sysYtbRemoved:'eliminó un video', sysYtbNext:'siguiente video', sysYtbPrev:'video anterior', sysYtbSelect:'cambió video', sysYtbInvalid:'❌ Enlace inválido.', sysYtbFull:'❌ Lista llena (máx 5).', online:'en línea', lightMode:'Claro', darkMode:'Oscuro' }
 };
 let currentLang = 'fr';
 const t = k => LANGS[currentLang][k] || LANGS.fr[k] || k;
