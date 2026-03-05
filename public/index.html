@@ -19,29 +19,7 @@
       --text: #1a1a2e; --muted: #888899;
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: var(--fs); overflow: hidden; transition: background .3s, color .3s; }
-
-    /* ── MODAL PSEUDO ─── */
-    #modal {
-      position: fixed; inset: 0; background: rgba(10,10,15,.92); backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center; z-index: 500;
-    }
-    .modal-box {
-      background: var(--surface); border: 1px solid var(--border); padding: 36px 32px;
-      display: flex; flex-direction: column; gap: 14px; width: 320px; animation: popIn .25s ease; overflow: hidden;
-    }
-    @keyframes popIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
-    .modal-logo { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:#cc2222; letter-spacing:4px; text-align:center; text-shadow: 0 0 30px rgba(200,30,30,.3); width:100%; white-space:nowrap; }
-    .modal-sub { font-size:.62rem; color:var(--muted); letter-spacing:3px; text-transform:uppercase; text-align:center; }
-    .modal-label { font-size:.62rem; color:#cc2222; letter-spacing:2px; text-transform:uppercase; }
-    .modal-input { background:var(--card); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.95rem; padding:12px 14px; outline:none; width:100%; transition:border-color .2s; caret-color:#cc2222; }
-    .modal-input:focus { border-color:#cc2222; }
-    .modal-input::placeholder { color:#cc2222; opacity:.5; font-size:.75rem; letter-spacing:1px; }
-    .modal-error { font-size:.68rem; color:var(--red); min-height:16px; }
-    .modal-btn { background:#cc2222; color:#fff; border:none; font-family:'JetBrains Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:12px; cursor:pointer; transition:opacity .2s; }
-    .modal-btn:hover { opacity:.85; }
-    .modal-flags { display:flex; gap:8px; justify-content:center; }
-    .flag-btn { background:none; border:1px solid var(--border); cursor:pointer; font-size:1.2rem; padding:3px 7px; transition:border-color .15s; }
-    .flag-btn:hover, .flag-btn.active { border-color:var(--accent); background:rgba(127,255,110,.06); }
+    to{opacity:1;transform:scale(1)} }
 
     /* ── APP LAYOUT ─────
        Header (full width)
@@ -503,7 +481,7 @@ document.getElementById('chatInp').onkeydown=e=>{if(e.key==='Enter')sendChat();}
 
 // INIT
 setLang('fr');
-document.getElementById('uname').focus();
+document.getElementById('chatInp').focus();
 </script>
 </body>
 </html>

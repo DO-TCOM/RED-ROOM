@@ -7,18 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Servir fichiers statiques
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Route catch-all pour SPA
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Stockage des rooms
 const rooms = {};
 
-// Génération de pseudo simple
 function generateRandomUsername() {
   const adjectives = ['Rouge', 'Noir', 'Blanc', 'Gris', 'Bleu', 'Vert'];
   const nouns = ['Fantome', 'Ombre', 'Echo', 'Visiteur', 'Voyageur'];
@@ -28,10 +23,31 @@ function generateRandomUsername() {
   return `${adj}${noun}${num}`;
 }
 
-// Extraction ID YouTube
 function extractYouTubeId(url) {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
+}
+
+function getRoom(name) {
+  if (!rooms[name]) {
+    rooms[name] = {
+      users: {},
+      playlist: [],
+      currentIndex: -1,
+      playerState: { playing: false, currentTime: 0, updatedAt: Date.now() }
+    };
+  }
+  return rooms[name];
+}
+
+function broadcastUserList(roomName) {
+  const room = rooms[roomName];
+  if (!room) return;
+  io.to(roomName).emit('userList',
+    Object.entries(room.users).map(([id, u]) => ({
+      id, username: u.username, videoOn: u.videoOn, micOn: u.micOn, isAdmin: u.isAdmin
+    }))
+  );
 }
 
 io.on('connection', (socket) => {
@@ -42,230 +58,127 @@ io.on('connection', (socket) => {
     try {
       currentRoom = roomName || 'default';
       socket.join(currentRoom);
-      
-      // Créer la room si elle n'existe pas
-      if (!rooms[currentRoom]) {
-        rooms[currentRoom] = {
-          users: {},
-          playlist: [],
-          currentIndex: -1,
-          playerState: { playing: false, currentTime: 0, updatedAt: Date.now() }
-        };
-      }
-      
-      const room = rooms[currentRoom];
+
+      const room = getRoom(currentRoom);
       const username = generateRandomUsername();
-      
-      // Ajouter l'utilisateur
-      room.users[socket.id] = { 
-        username, 
-        videoOn: false, 
-        micOn: false, 
-        isAdmin: false 
-      };
-      
-      // Envoyer les données initiales
+      room.users[socket.id] = { username, videoOn: false, micOn: false, isAdmin: false };
+
       socket.emit('joinOk', { username, isAdmin: false });
-      socket.emit('videoState', { 
-        playlist: room.playlist, 
-        currentIndex: room.currentIndex, 
-        playerState: room.playerState 
-      });
-      
-      // Notifier les autres
-      socket.to(currentRoom).emit('userJoined', { 
-        id: socket.id, 
-        username, 
-        videoOn: false, 
-        micOn: false, 
-        isAdmin: false 
-      });
-      
-      io.to(currentRoom).emit('system', { 
-        text: username, 
-        event: 'joined', 
-        count: Object.keys(room.users).length 
-      });
-      
-      io.to(currentRoom).emit('userList', 
-        Object.entries(room.users).map(([id, u]) => ({
-          id, 
-          username: u.username, 
-          videoOn: u.videoOn, 
-          micOn: u.micOn, 
-          isAdmin: u.isAdmin
-        }))
+      socket.emit('existingUsers',
+        Object.entries(room.users)
+          .filter(([id]) => id !== socket.id)
+          .map(([id, u]) => ({ id, ...u }))
       );
-      
-      console.log(`User ${username} joined room ${currentRoom}`);
-      
-    } catch (error) {
-      console.error('Error in joinRoom:', error);
+      socket.emit('videoState', {
+        playlist: room.playlist, currentIndex: room.currentIndex, playerState: room.playerState
+      });
+      socket.to(currentRoom).emit('userJoined', {
+        id: socket.id, username, videoOn: false, micOn: false, isAdmin: false
+      });
+      io.to(currentRoom).emit('system', {
+        text: username, event: 'joined', count: Object.keys(room.users).length
+      });
+      broadcastUserList(currentRoom);
+      console.log(`${username} joined ${currentRoom}`);
+    } catch (err) {
+      console.error('joinRoom error:', err);
       socket.emit('joinError', 'Server error');
     }
   });
 
-  // WebRTC signaling
-  socket.on('webrtc-offer', ({ to, offer }) => {
-    try {
-      io.to(to).emit('webrtc-offer', { from: socket.id, offer });
-    } catch (error) {
-      console.error('Error in webrtc-offer:', error);
-    }
-  });
+  socket.on('webrtc-offer',   ({ to, offer })     => io.to(to).emit('webrtc-offer',  { from: socket.id, fromName: rooms[currentRoom]?.users[socket.id]?.username, offer }));
+  socket.on('webrtc-answer',  ({ to, answer })    => io.to(to).emit('webrtc-answer', { from: socket.id, answer }));
+  socket.on('webrtc-ice',     ({ to, candidate }) => io.to(to).emit('webrtc-ice',    { from: socket.id, candidate }));
+  socket.on('webrtc-hangup',  ({ to })            => io.to(to).emit('webrtc-hangup', { from: socket.id }));
 
-  socket.on('webrtc-answer', ({ to, answer }) => {
-    try {
-      io.to(to).emit('webrtc-answer', { from: socket.id, answer });
-    } catch (error) {
-      console.error('Error in webrtc-answer:', error);
-    }
-  });
-
-  socket.on('webrtc-ice', ({ to, candidate }) => {
-    try {
-      io.to(to).emit('webrtc-ice', { from: socket.id, candidate });
-    } catch (error) {
-      console.error('Error in webrtc-ice:', error);
-    }
-  });
-
-  socket.on('webrtc-hangup', ({ to }) => {
-    try {
-      io.to(to).emit('webrtc-hangup', { from: socket.id });
-    } catch (error) {
-      console.error('Error in webrtc-hangup:', error);
-    }
-  });
-
-  // Media state changes
   socket.on('mediaState', ({ videoOn, micOn }) => {
     try {
       if (!currentRoom) return;
       const room = rooms[currentRoom];
-      if (!room) return;
-      
-      const user = room.users[socket.id];
-      if (!user) return;
-      
-      user.videoOn = videoOn;
-      user.micOn = micOn;
-      
-      socket.to(currentRoom).emit('peerMediaState', {
-        id: socket.id,
-        videoOn,
-        micOn
-      });
-      
-      io.to(currentRoom).emit('userList',
-        Object.entries(room.users).map(([id, u]) => ({
-          id,
-          username: u.username,
-          videoOn: u.videoOn,
-          micOn: u.micOn,
-          isAdmin: u.isAdmin
-        }))
-      );
-      
-    } catch (error) {
-      console.error('Error in mediaState:', error);
-    }
+      if (!room?.users[socket.id]) return;
+      room.users[socket.id].videoOn = videoOn;
+      room.users[socket.id].micOn = micOn;
+      socket.to(currentRoom).emit('peerMediaState', { id: socket.id, videoOn, micOn });
+      broadcastUserList(currentRoom);
+    } catch (err) { console.error('mediaState error:', err); }
   });
 
   socket.on('message', (text) => {
     try {
       if (!currentRoom) return;
       const room = rooms[currentRoom];
-      if (!room) return;
-      
-      const user = room.users[socket.id];
+      const user = room?.users[socket.id];
       if (!user) return;
-      
-      // Message YouTube
+
       if (text.trim().startsWith('!ytb ')) {
         const videoUrl = text.trim().slice(5).trim();
         const videoId = extractYouTubeId(videoUrl);
-        
-        if (!videoId) {
-          socket.emit('system', { text: '', event: 'ytbInvalid', count: Object.keys(room.users).length });
-          return;
-        }
-        
-        if (room.playlist.length >= 5) {
-          socket.emit('system', { text: '', event: 'ytbFull', count: Object.keys(room.users).length });
-          return;
-        }
-        
-        room.playlist.push({ 
-          url: videoUrl, 
-          videoId, 
-          addedBy: user.username 
-        });
-        
-        if (room.currentIndex === -1) {
-          room.currentIndex = 0;
-          room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() };
-        }
-        
-        io.to(currentRoom).emit('videoState', {
-          playlist: room.playlist,
-          currentIndex: room.currentIndex,
-          playerState: room.playerState
-        });
-        
-        io.to(currentRoom).emit('system', {
-          text: user.username,
-          event: 'ytbAdded',
-          count: Object.keys(room.users).length,
-          total: room.playlist.length
-        });
-        
+        if (!videoId) { socket.emit('system', { text: '', event: 'ytbInvalid', count: Object.keys(room.users).length }); return; }
+        if (room.playlist.length >= 5) { socket.emit('system', { text: '', event: 'ytbFull', count: Object.keys(room.users).length }); return; }
+        room.playlist.push({ url: videoUrl, videoId, addedBy: user.username });
+        if (room.currentIndex === -1) { room.currentIndex = 0; room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() }; }
+        io.to(currentRoom).emit('videoState', { playlist: room.playlist, currentIndex: room.currentIndex, playerState: room.playerState });
+        io.to(currentRoom).emit('system', { text: user.username, event: 'ytbAdded', count: Object.keys(room.users).length, total: room.playlist.length });
         return;
       }
-      
-      // Message normal
+
       io.to(currentRoom).emit('message', {
-        username: user.username,
-        text,
-        id: socket.id,
-        time: new Date().toLocaleTimeString('fr-FR', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
+        username: user.username, text, id: socket.id,
+        time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
       });
-      
-    } catch (error) {
-      console.error('Error in message:', error);
-    }
+    } catch (err) { console.error('message error:', err); }
+  });
+
+  socket.on('videoControl', ({ action, value }) => {
+    try {
+      if (!currentRoom) return;
+      const room = rooms[currentRoom];
+      if (!room?.users[socket.id]) return;
+      const ps = room.playerState;
+      if      (action === 'play')   { room.playerState = { playing: true,  currentTime: value ?? ps.currentTime, updatedAt: Date.now() }; }
+      else if (action === 'pause')  { room.playerState = { playing: false, currentTime: value ?? ps.currentTime, updatedAt: Date.now() }; }
+      else if (action === 'seek')   { room.playerState = { ...ps, currentTime: value, updatedAt: Date.now() }; }
+      else if (action === 'next')   { if (room.currentIndex < room.playlist.length - 1) { room.currentIndex++; room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() }; } }
+      else if (action === 'prev')   { if (room.currentIndex > 0) { room.currentIndex--; room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() }; } }
+      else if (action === 'select') { room.currentIndex = value; room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() }; }
+      else if (action === 'remove') {
+        if (value >= 0 && value < room.playlist.length) {
+          room.playlist.splice(value, 1);
+          if (room.currentIndex >= room.playlist.length) room.currentIndex = room.playlist.length - 1;
+          if (room.playlist.length === 0) { room.currentIndex = -1; room.playerState.playing = false; }
+        }
+      }
+      io.to(currentRoom).emit('videoState', { playlist: room.playlist, currentIndex: room.currentIndex, playerState: room.playerState });
+    } catch (err) { console.error('videoControl error:', err); }
+  });
+
+  socket.on('kick', (targetId) => {
+    if (!currentRoom) return;
+    const room = rooms[currentRoom];
+    if (!room?.users[socket.id]?.isAdmin) return;
+    const target = room.users[targetId];
+    if (!target) return;
+    io.to(targetId).emit('kicked');
+    io.sockets.sockets.get(targetId)?.disconnect(true);
+    delete room.users[targetId];
+    io.to(currentRoom).emit('system', { text: target.username, event: 'kicked', count: Object.keys(room.users).length });
+    broadcastUserList(currentRoom);
   });
 
   socket.on('disconnect', () => {
     try {
       if (!currentRoom) return;
       const room = rooms[currentRoom];
-      if (!room) return;
-      
-      const user = room.users[socket.id];
+      const user = room?.users[socket.id];
       if (!user) return;
-      
       delete room.users[socket.id];
-      
       socket.to(currentRoom).emit('peerLeft', { id: socket.id });
-      io.to(currentRoom).emit('system', {
-        text: user.username,
-        event: 'left',
-        count: Object.keys(room.users).length
-      });
-      
-      console.log(`User ${user.username} left room ${currentRoom}`);
-      
-    } catch (error) {
-      console.error('Error in disconnect:', error);
-    }
+      io.to(currentRoom).emit('system', { text: user.username, event: 'left', count: Object.keys(room.users).length });
+      broadcastUserList(currentRoom);
+      console.log(`${user.username} left ${currentRoom}`);
+    } catch (err) { console.error('disconnect error:', err); }
   });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
