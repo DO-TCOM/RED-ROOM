@@ -52,13 +52,13 @@
 
     /* Tablette */
     @media (max-width: 900px) {
-      #app { grid-template-columns: 40% 10% 50%; grid-template-rows: 46px 1fr 130px; }
+      #app { grid-template-columns: 0% 60% 40%; grid-template-rows: 46px 1fr 130px; }
+      #members-panel { display: none; }
     }
     /* Mobile */
     @media (max-width: 600px) {
-      #app { grid-template-columns: 0px 0px 100%; grid-template-rows: 46px 1fr 100px; }
-      #yt-area, #members-panel { display: none; }
-      #cam-row { display: none; }
+      #app { grid-template-columns: 0% 100% 0%; grid-template-rows: 46px 1fr 0px; }
+      #yt-area, #members-panel, #cam-row { display: none; }
     }
     #app.show { display:grid; }
 
