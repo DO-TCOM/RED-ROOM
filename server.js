@@ -88,9 +88,13 @@ io.on('connection', (socket) => {
     
     // Émet aux autres dans la room seulement si la room existe
     if (currentRoom && rooms[currentRoom]) {
-      socket.to(currentRoom).broadcast.emit('userJoined', { id: socket.id, username, videoOn: false, micOn: false, isAdmin: isAdminUser });
-      io.to(currentRoom).emit('system', { text: username, event: 'joined', count: Object.keys(roomData.users).length });
-      io.to(currentRoom).emit('userList', Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+      try {
+        socket.to(currentRoom).broadcast.emit('userJoined', { id: socket.id, username, videoOn: false, micOn: false, isAdmin: isAdminUser });
+        io.to(currentRoom).emit('system', { text: username, event: 'joined', count: Object.keys(roomData.users).length });
+        io.to(currentRoom).emit('userList', Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+      } catch (error) {
+        console.error('Error emitting to room:', error);
+      }
     }
   });
 
