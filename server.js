@@ -28,6 +28,12 @@ function generateRandomUsername() {
   return `${adj}${noun}${num}`;
 }
 
+// Extraction ID YouTube
+function extractYouTubeId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   let currentRoom = null;
@@ -110,7 +116,43 @@ io.on('connection', (socket) => {
       
       // Message YouTube
       if (text.trim().startsWith('!ytb ')) {
-        // TODO: Implémenter YouTube plus tard
+        const videoUrl = text.trim().slice(5).trim();
+        const videoId = extractYouTubeId(videoUrl);
+        
+        if (!videoId) {
+          socket.emit('system', { text: '', event: 'ytbInvalid', count: Object.keys(room.users).length });
+          return;
+        }
+        
+        if (room.playlist.length >= 5) {
+          socket.emit('system', { text: '', event: 'ytbFull', count: Object.keys(room.users).length });
+          return;
+        }
+        
+        room.playlist.push({ 
+          url: videoUrl, 
+          videoId, 
+          addedBy: user.username 
+        });
+        
+        if (room.currentIndex === -1) {
+          room.currentIndex = 0;
+          room.playerState = { playing: true, currentTime: 0, updatedAt: Date.now() };
+        }
+        
+        io.to(currentRoom).emit('videoState', {
+          playlist: room.playlist,
+          currentIndex: room.currentIndex,
+          playerState: room.playerState
+        });
+        
+        io.to(currentRoom).emit('system', {
+          text: user.username,
+          event: 'ytbAdded',
+          count: Object.keys(room.users).length,
+          total: room.playlist.length
+        });
+        
         return;
       }
       
