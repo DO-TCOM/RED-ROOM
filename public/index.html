@@ -172,13 +172,13 @@
 </head>
 <body>
 
-<!-- MODAL PSEUDO -->
-<div id="modal">
+<!-- LOGIN FORM INTEGRATED -->
+<div id="login-panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg);">
   <div class="modal-box">
     <div class="modal-logo">RED<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
     <div class="modal-sub" data-i18n="loginSub">vidéo · micro · youtube</div>
-    <div class="modal-label" data-i18n="pseudoLabel">Ton pseudo</div>
-    <input class="modal-input" id="uname" type="text" maxlength="20" autocomplete="off"/>
+    <div class="modal-label" data-i18n="pseudoLabel">Pseudo (laisser vide pour aléatoire)</div>
+    <input class="modal-input" id="uname" type="text" maxlength="20" autocomplete="off" placeholder=""/>
     <div id="passwordWrap" style="display:none; flex-direction:column; gap:6px;">
       <div class="modal-label" style="color:#cc2222;font-size:.55rem;">MOT DE PASSE ADMIN</div>
       <input class="modal-input" id="upassword" type="password" maxlength="30" autocomplete="off" placeholder="password"/>
@@ -347,13 +347,13 @@ function doJoin() {
   const name = document.getElementById('uname').value.trim();
   const password = document.getElementById('upassword')?.value || '';
   document.getElementById('loginError').textContent = '';
-  if (!name) return;
+  // Permet de rejoindre avec un pseudo vide pour génération aléatoire
   socket.emit('join', { username: name, password });
 }
 socket.on('joinOk', ({ username, isAdmin }) => {
   myName = username;
   myIsAdmin = isAdmin;
-  document.getElementById('modal').style.display = 'none';
+  document.getElementById('login-panel').style.display = 'none';
   document.getElementById('app').classList.add('show');
   makeTile(myId, username, null, true);
   document.getElementById('chatInp').focus();

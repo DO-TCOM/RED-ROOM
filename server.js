@@ -7,6 +7,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.get('/RedRoom', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -23,22 +26,44 @@ function extractYouTubeId(url) {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
   return m ? m[1] : null;
 }
+function generateRandomUsername() {
+  const adjectives = ['Rouge', 'Noir', 'Blanc', 'Gris', 'Bleu', 'Vert', 'Or', 'Argent', 'Froid', 'Chaud', 'Sombre', 'Lumineux', 'Silencieux', 'Mystique', 'Secret'];
+  const nouns = ['Fantôme', 'Ombre', 'Écho', 'Visiteur', 'Voyageur', 'Étranger', 'Invité', 'Passant', 'Observateur', 'Silence', 'Mystère', 'Secret'];
+  const numbers = Math.floor(Math.random() * 999) + 1;
+  
+  let username;
+  let attempts = 0;
+  do {
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    username = `${adj}${noun}${numbers}`;
+    attempts++;
+  } while (isNameTaken(username) && attempts < 50);
+  
+  return username;
+}
 function normalizeName(n) {
   return n.toLowerCase().replace(/l/g,'i').replace(/1/g,'i').replace(/0/g,'o').replace(/\|/g,'i');
 }
 function isNameTaken(n) {
   return Object.values(users).some(u => normalizeName(u.username) === normalizeName(n));
 }
-function isAdmin(socketId) {
-  return users[socketId]?.isAdmin === true;
-}
 
 io.on('connection', (socket) => {
+  function isAdmin(socketId) {
+    return users[socketId]?.isAdmin === true;
+  }
 
   socket.on('join', (payload) => {
     let username, password;
     if (typeof payload === 'object') { username = payload.username; password = payload.password; }
     else { username = payload; password = ''; }
+
+    // Si pas de pseudo fourni, en générer un aléatoirement
+    if (!username || username.trim() === '') {
+      username = generateRandomUsername();
+      password = '';
+    }
 
     const trimmed = (username || '').trim();
     if (!trimmed || trimmed.length < 2 || trimmed.length > 20) { socket.emit('joinError','LENGTH'); return; }
