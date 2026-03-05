@@ -27,10 +27,10 @@
     }
     .modal-box {
       background: var(--surface); border: 1px solid var(--border); padding: 36px 32px;
-      display: flex; flex-direction: column; gap: 14px; width: 320px; animation: popIn .25s ease;
+      display: flex; flex-direction: column; gap: 14px; width: 320px; animation: popIn .25s ease; overflow: hidden;
     }
     @keyframes popIn { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
-    .modal-logo { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:#cc2222; letter-spacing:-1px; text-align:center; text-shadow: 0 0 30px rgba(200,30,30,.3); width:100%; overflow:hidden; }
+    .modal-logo { font-family:'Syne',sans-serif; font-size:2.2rem; font-weight:800; color:#cc2222; letter-spacing:2px; text-align:center; text-shadow: 0 0 30px rgba(200,30,30,.3); width:100%; }
     .modal-sub { font-size:.62rem; color:var(--muted); letter-spacing:3px; text-transform:uppercase; text-align:center; }
     .modal-label { font-size:.62rem; color:#cc2222; letter-spacing:2px; text-transform:uppercase; }
     .modal-input { background:var(--card); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.95rem; padding:12px 14px; outline:none; width:100%; transition:border-color .2s; caret-color:#cc2222; }
@@ -192,7 +192,7 @@
 <!-- APP -->
 <div id="app">
   <header>
-    <div class="h-logo">CHAT<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
+    <div class="h-logo">RED<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
     <div class="h-right">
       <!-- Font size -->
       <div class="fs-ctrl">
