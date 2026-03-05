@@ -172,29 +172,8 @@
 </head>
 <body>
 
-<!-- LOGIN FORM INTEGRATED -->
-<div id="login-panel" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:var(--bg);">
-  <div class="modal-box">
-    <div class="modal-logo">RED<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
-    <div class="modal-sub" data-i18n="loginSub">vidéo · micro · youtube</div>
-    <div class="modal-label" data-i18n="pseudoLabel">Pseudo (laisser vide pour aléatoire)</div>
-    <input class="modal-input" id="uname" type="text" maxlength="20" autocomplete="off" placeholder=""/>
-    <div id="passwordWrap" style="display:none; flex-direction:column; gap:6px;">
-      <div class="modal-label" style="color:#cc2222;font-size:.55rem;">MOT DE PASSE ADMIN</div>
-      <input class="modal-input" id="upassword" type="password" maxlength="30" autocomplete="off" placeholder="password"/>
-    </div>
-    <div class="modal-error" id="loginError"></div>
-    <button class="modal-btn" id="joinBtn" data-i18n="joinBtn">→ Rejoindre</button>
-    <div class="modal-flags">
-      <button class="flag-btn active" onclick="setLang('fr')">🇫🇷</button>
-      <button class="flag-btn" onclick="setLang('en')">🇬🇧</button>
-      <button class="flag-btn" onclick="setLang('es')">🇪🇸</button>
-    </div>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
+<!-- APP DIRECT -->
+<div id="app" class="show">
   <header>
     <div class="h-logo">RED<span style="color:var(--text);opacity:.2">.</span>ROOM</div>
     <div class="h-right">
@@ -273,7 +252,7 @@
 // I18N
 // ══════════════════════════════════════
 const LANGS = {
-  fr: { loginSub:'vidéo · micro · youtube', pseudoLabel:'Ton pseudo', pseudoPlaceholder:'nickname', joinBtn:'→ Rejoindre', connected:'connecté', members:'Membres', playlist:'Playlist', chatPlaceholder:'Message ou !ytb …', chatHint:'!ytb [lien] pour ajouter une vidéo', ytbEmpty:'Aucune vidéo\nTape !ytb [lien YouTube] dans le chat\n(max 5)', ytbEmptyPlaylist:'Vide · utilise !ytb', you:'(toi)', errTaken:'Pseudo déjà utilisé !', errLength:'2 à 20 caractères.', sysJoined:'a rejoint', sysLeft:'a quitté', sysKicked:'a été expulsé', sysYtbAdded:'a ajouté une vidéo', sysYtbRemoved:'a retiré une vidéo', sysYtbNext:'vidéo suivante', sysYtbPrev:'vidéo précédente', sysYtbSelect:'a changé de vidéo', sysYtbInvalid:'❌ Lien invalide.', sysYtbFull:'❌ Playlist pleine (max 5).', online:'en ligne', lightMode:'Clair', darkMode:'Sombre' },
+  fr: { loginSub:'vidéo · micro · youtube', pseudoLabel:'Pseudo (laisser vide pour aléatoire)', pseudoPlaceholder:'nickname', joinBtn:'→ Rejoindre', connected:'connecté', members:'Membres', playlist:'Playlist', chatPlaceholder:'Message ou !ytb …', chatHint:'!ytb [lien] pour ajouter une vidéo', ytbEmpty:'Aucune vidéo\nTape !ytb [lien YouTube] dans le chat\n(max 5)', ytbEmptyPlaylist:'Vide · utilise !ytb', you:'(toi)', errTaken:'Pseudo déjà utilisé !', errLength:'2 à 20 caractères.', sysJoined:'a rejoint', sysLeft:'a quitté', sysKicked:'a été expulsé', sysYtbAdded:'a ajouté une vidéo', sysYtbRemoved:'a retiré une vidéo', sysYtbNext:'vidéo suivante', sysYtbPrev:'vidéo précédente', sysYtbSelect:'a changé de vidéo', sysYtbInvalid:'❌ Lien invalide.', sysYtbFull:'❌ Playlist pleine (max 5).', online:'en ligne', lightMode:'Clair', darkMode:'Sombre' },
   en: { loginSub:'video · mic · youtube', pseudoLabel:'Your username', pseudoPlaceholder:'nickname', joinBtn:'→ Join', connected:'connected', members:'Members', playlist:'Playlist', chatPlaceholder:'Message or !ytb …', chatHint:'!ytb [link] to add a video', ytbEmpty:'No video\nType !ytb [YouTube link] in chat\n(max 5)', ytbEmptyPlaylist:'Empty · use !ytb', you:'(you)', errTaken:'Username already taken!', errLength:'2 to 20 characters.', sysJoined:'joined', sysLeft:'left', sysKicked:'was kicked', sysYtbAdded:'added a video', sysYtbRemoved:'removed a video', sysYtbNext:'next video', sysYtbPrev:'previous video', sysYtbSelect:'changed video', sysYtbInvalid:'❌ Invalid link.', sysYtbFull:'❌ Playlist full (max 5).', online:'online', lightMode:'Light', darkMode:'Dark' },
   es: { loginSub:'video · micro · youtube', pseudoLabel:'Tu nombre', pseudoPlaceholder:'nickname', joinBtn:'→ Entrar', connected:'conectado', members:'Miembros', playlist:'Lista', chatPlaceholder:'Mensaje o !ytb …', chatHint:'!ytb [enlace] para añadir video', ytbEmpty:'Sin video\nEscribe !ytb [enlace YouTube]\n(máx 5)', ytbEmptyPlaylist:'Vacía · usa !ytb', you:'(tú)', errTaken:'¡Nombre ya en uso!', errLength:'2 a 20 caracteres.', sysJoined:'entró', sysLeft:'salió', sysKicked:'fue expulsado', sysYtbAdded:'añadió un video', sysYtbRemoved:'eliminó un video', sysYtbNext:'siguiente video', sysYtbPrev:'video anterior', sysYtbSelect:'cambió video', sysYtbInvalid:'❌ Enlace inválido.', sysYtbFull:'❌ Lista llena (máx 5).', online:'en línea', lightMode:'Claro', darkMode:'Oscuro' }
 };
@@ -283,11 +262,8 @@ const t = k => LANGS[currentLang][k] || LANGS.fr[k] || k;
 function setLang(lang) {
   currentLang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
-  document.querySelectorAll('.flag-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll(`.flag-btn[onclick="setLang('${lang}')"]`).forEach(b => b.classList.add('active'));
   ['lmFr','lmEn','lmEs'].forEach(id => document.getElementById(id)?.classList.remove('active'));
   document.getElementById(lang==='fr'?'lmFr':lang==='en'?'lmEn':'lmEs')?.classList.add('active');
-  document.getElementById('uname').placeholder = t('pseudoPlaceholder');
   document.getElementById('chatInp').placeholder = t('chatPlaceholder');
   document.getElementById('chatHint').textContent = t('chatHint');
   document.getElementById('ytEmptyText').innerHTML = t('ytbEmpty').replace(/\n/g,'<br>').replace(/(!ytb \[.*?\])/g,'<span class="yt-empty-cmd">$1</span>');
@@ -325,36 +301,16 @@ const fmtTime = s => { s=Math.floor(s||0); return `${Math.floor(s/60)}:${String(
 const scrollChat = () => { const c=document.getElementById('panel-chat'); c.scrollTop=c.scrollHeight; };
 
 // ══════════════════════════════════════
-// LOGIN (modal)
+// AUTO JOIN
 // ══════════════════════════════════════
-socket.on('connect', () => { myId = socket.id; });
-document.getElementById('joinBtn').onclick = doJoin;
-document.getElementById('uname').onkeydown = e => {
-  if (e.key==='Enter') doJoin();
-  // Affiche champ password si pseudo == OG
-  const v = document.getElementById('uname').value.trim().toLowerCase();
-  const pw = document.getElementById('passwordWrap');
-  pw.style.display = (v === 'og') ? 'flex' : 'none';
-};
-document.getElementById('uname').oninput = e => {
-  const v = e.target.value.trim().toLowerCase();
-  const pw = document.getElementById('passwordWrap');
-  pw.style.display = (v === 'og') ? 'flex' : 'none';
-};
-document.getElementById('uname').focus();
-
-function doJoin() {
-  const name = document.getElementById('uname').value.trim();
-  const password = document.getElementById('upassword')?.value || '';
-  document.getElementById('loginError').textContent = '';
-  // Permet de rejoindre avec un pseudo vide pour génération aléatoire
-  socket.emit('join', { username: name, password });
-}
+socket.on('connect', () => { 
+  myId = socket.id; 
+  // Rejoint automatiquement avec pseudo vide pour génération aléatoire
+  socket.emit('join', { username: '', password: '' });
+});
 socket.on('joinOk', ({ username, isAdmin }) => {
   myName = username;
   myIsAdmin = isAdmin;
-  document.getElementById('login-panel').style.display = 'none';
-  document.getElementById('app').classList.add('show');
   makeTile(myId, username, null, true);
   document.getElementById('chatInp').focus();
   setLang(currentLang);
@@ -369,9 +325,7 @@ socket.on('joinOk', ({ username, isAdmin }) => {
   }
 });
 socket.on('joinError', (code) => {
-  const msgs = { TAKEN: t('errTaken'), LENGTH: t('errLength'), RESERVED: '❌ Pseudo réservé — mot de passe requis.' };
-  document.getElementById('loginError').textContent = msgs[code] || t('errLength');
-  document.getElementById('uname').focus();
+  console.error('Join error:', code);
 });
 socket.on('kicked', () => {
   alert('Tu as été expulsé du salon.');
