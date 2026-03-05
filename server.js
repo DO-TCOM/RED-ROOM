@@ -7,10 +7,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-app.use(express.static(path.join(__dirname, 'public')));
 
 const ADMIN_USERNAME = 'OG';
 const ADMIN_PASSWORD = 'admin';
