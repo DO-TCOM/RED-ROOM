@@ -113,11 +113,19 @@ io.on('connection', (socket) => {
         roomData.currentIndex=0; 
         roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()}; 
       }
-      io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});
-      io.to(currentRoom).emit('system',{text:u.username,event:'ytbAdded',count:Object.keys(roomData.users).length,total:roomData.playlist.length});
+      try {
+        io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});
+        io.to(currentRoom).emit('system',{text:u.username,event:'ytbAdded',count:Object.keys(roomData.users).length,total:roomData.playlist.length});
+      } catch (error) {
+        console.error('Error in ytb message:', error);
+      }
       return;
     }
-    io.to(currentRoom).emit('message', { username: u.username, text, id: socket.id, time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) });
+    try {
+      io.to(currentRoom).emit('message', { username: u.username, text, id: socket.id, time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) });
+    } catch (error) {
+      console.error('Error emitting message:', error);
+    }
   });
 
   // VIDEO CONTROLS — admin only
@@ -128,13 +136,17 @@ io.on('connection', (socket) => {
     if(!u) return;
     if (!isAdmin(roomData, socket.id)) return;
     
-    if (action==='play')        { roomData.playerState={playing:true,currentTime:value??roomData.playerState.currentTime,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
-    else if(action==='pause')   { roomData.playerState={playing:false,currentTime:value??roomData.playerState.currentTime,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
-    else if(action==='seek')    { roomData.playerState={...roomData.playerState,currentTime:value,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
-    else if(action==='next')    { if(roomData.currentIndex<roomData.playlist.length-1){roomData.currentIndex++;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbNext',count:Object.keys(roomData.users).length});} }
-    else if(action==='prev')    { if(roomData.currentIndex>0){roomData.currentIndex--;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbPrev',count:Object.keys(roomData.users).length});} }
-    else if(action==='remove')  { if(value>=0&&value<roomData.playlist.length){roomData.playlist.splice(value,1);if(roomData.currentIndex>=roomData.playlist.length)roomData.currentIndex=roomData.playlist.length-1;if(roomData.playlist.length===0){roomData.currentIndex=-1;roomData.playerState.playing=false;}io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbRemoved',count:Object.keys(roomData.users).length});} }
-    else if(action==='select')  { roomData.currentIndex=value;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbSelect',count:Object.keys(roomData.users).length}); }
+    try {
+      if (action==='play')        { roomData.playerState={playing:true,currentTime:value??roomData.playerState.currentTime,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
+      else if(action==='pause')   { roomData.playerState={playing:false,currentTime:value??roomData.playerState.currentTime,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
+      else if(action==='seek')    { roomData.playerState={...roomData.playerState,currentTime:value,updatedAt:Date.now()}; io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState}); }
+      else if(action==='next')    { if(roomData.currentIndex<roomData.playlist.length-1){roomData.currentIndex++;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbNext',count:Object.keys(roomData.users).length});} }
+      else if(action==='prev')    { if(roomData.currentIndex>0){roomData.currentIndex--;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbPrev',count:Object.keys(roomData.users).length});} }
+      else if(action==='remove')  { if(value>=0&&value<roomData.playlist.length){roomData.playlist.splice(value,1);if(roomData.currentIndex>=roomData.playlist.length)roomData.currentIndex=roomData.playlist.length-1;if(roomData.playlist.length===0){roomData.currentIndex=-1;roomData.playerState.playing=false;}io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbRemoved',count:Object.keys(roomData.users).length});} }
+      else if(action==='select')  { roomData.currentIndex=value;roomData.playerState={playing:true,currentTime:0,updatedAt:Date.now()};io.to(currentRoom).emit('videoState',{playlist:roomData.playlist,currentIndex:roomData.currentIndex,playerState:roomData.playerState});io.to(currentRoom).emit('system',{text:u.username,event:'ytbSelect',count:Object.keys(roomData.users).length}); }
+    } catch (error) {
+      console.error('Error in videoControl:', error);
+    }
   });
 
   // KICK — admin only
