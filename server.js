@@ -160,8 +160,10 @@ io.on('connection', (socket) => {
       roomData.users[socket.id].videoOn=videoOn;
       roomData.users[socket.id].micOn=micOn;
     }
-    socket.to(currentRoom).broadcast.emit('peerMediaState',{id:socket.id,videoOn,micOn});
-    io.to(currentRoom).emit('userList',Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+    if (currentRoom && rooms[currentRoom]) {
+      socket.to(currentRoom).broadcast.emit('peerMediaState',{id:socket.id,videoOn,micOn});
+      io.to(currentRoom).emit('userList',Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+    }
   });
 
   socket.on('disconnect', () => {
@@ -170,9 +172,11 @@ io.on('connection', (socket) => {
     const u = roomData.users[socket.id]; 
     if(!u) return;
     delete roomData.users[socket.id];
-    socket.to(currentRoom).broadcast.emit('peerLeft',{id:socket.id});
-    io.to(currentRoom).emit('system',{text:u.username,event:'left',count:Object.keys(roomData.users).length});
-    io.to(currentRoom).emit('userList',Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+    if (currentRoom && rooms[currentRoom]) {
+      socket.to(currentRoom).broadcast.emit('peerLeft',{id:socket.id});
+      io.to(currentRoom).emit('system',{text:u.username,event:'left',count:Object.keys(roomData.users).length});
+      io.to(currentRoom).emit('userList',Object.entries(roomData.users).map(([id,u])=>({id, username:u.username, videoOn:u.videoOn, micOn:u.micOn, isAdmin:u.isAdmin})));
+    }
   });
 });
 
