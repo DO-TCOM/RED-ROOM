@@ -113,9 +113,10 @@
 
     /* ── CHAT PANEL (column 3, rows 2+3) ── */
     #chat-panel { grid-column:2; grid-row:2/4; display:flex; flex-direction:column; overflow:hidden; background:var(--surface); transition:background .3s; min-width:0; min-height:0; }
-    #panel-chat { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:3px; scroll-behavior:smooth; }
+    #panel-chat { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; justify-content:flex-start; gap:3px; scroll-behavior:smooth; overflow-anchor:none; }
     #panel-chat::-webkit-scrollbar { width:3px; }
     #panel-chat::-webkit-scrollbar-thumb { background:var(--border); }
+    #chat-anchor { overflow-anchor:auto; height:1px; flex-shrink:0; }
     .msg { padding:7px 10px; animation:mIn .2s ease; }
     @keyframes mIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
     .msg.own   { background:rgba(127,255,110,.04); border-left:2px solid var(--accent); }
@@ -154,6 +155,18 @@
     .ctrl-btn.active-mic { border-color:var(--blue); color:var(--blue); }
     .ctrl-btn.muted-cam  { border-color:var(--red); color:var(--red); }
     .ctrl-btn.muted-mic  { border-color:var(--red); color:var(--red); }
+
+    /* ── RENAME MODAL ── */
+    #rename-modal { display:none; position:fixed; inset:0; background:rgba(10,10,15,.85); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; }
+    #rename-modal.open { display:flex; }
+    .rename-box { background:var(--surface); border:1px solid var(--border); padding:28px 24px; display:flex; flex-direction:column; gap:12px; width:280px; }
+    .rename-title { font-size:.75rem; color:var(--accent); letter-spacing:3px; text-transform:uppercase; }
+    .rename-inp { background:var(--card); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.95rem; padding:10px 12px; outline:none; width:100%; caret-color:var(--accent); }
+    .rename-inp:focus { border-color:var(--accent); }
+    .rename-err { font-size:.65rem; color:var(--red); min-height:14px; }
+    .rename-btns { display:flex; gap:8px; }
+    .rename-ok  { flex:1; background:var(--accent); color:#fff; border:none; font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; padding:10px; cursor:pointer; }
+    .rename-cancel { background:var(--card); color:var(--muted); border:1px solid var(--border); font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:10px 14px; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -176,6 +189,7 @@
         <button class="lang-mini-btn" id="lmEs" onclick="setLang('es')">🇪🇸</button>
       </div>
       <div class="h-status"><div class="dot"></div><span data-i18n="connected">connecté</span></div>
+      <button class="theme-btn" onclick="openRename()" id="renameBtn" style="border-color:var(--muted)">✏️ <span id="myNameDisplay">—</span></button>
     </div>
   </header>
 
@@ -212,7 +226,7 @@
 
   <!-- CHAT (col 3, rows 2+3) -->
   <div id="chat-panel">
-    <div id="panel-chat"></div>
+    <div id="panel-chat"><div id="chat-anchor"></div></div>
     <div class="chat-hint" id="chatHint"></div>
     <div class="chat-input-area">
       <span class="chat-prompt">›</span>
@@ -227,6 +241,19 @@
     <div class="my-controls">
       <button class="ctrl-btn muted-cam" id="btnCam"><span>📷</span><span id="lblCam">OFF</span></button>
       <button class="ctrl-btn muted-mic" id="btnMic"><span>🎙️</span><span id="lblMic">OFF</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div id="rename-modal">
+  <div class="rename-box">
+    <div class="rename-title">✏️ Changer de pseudo</div>
+    <input class="rename-inp" id="renameInp" type="text" maxlength="20" autocomplete="off" placeholder="Nouveau pseudo…"/>
+    <div class="rename-err" id="renameErr"></div>
+    <div class="rename-btns">
+      <button class="rename-cancel" onclick="closeRename()">Annuler</button>
+      <button class="rename-ok" onclick="submitRename()">Confirmer →</button>
     </div>
   </div>
 </div>
@@ -284,7 +311,10 @@ let ytPlayer=null, ytPlaylist=[], ytCurrentIndex=-1, ytProgressInterval=null, is
 
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const fmtTime = s => { s=Math.floor(s||0); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; };
-const scrollChat = () => { const c=document.getElementById('panel-chat'); c.scrollTop=c.scrollHeight; };
+const chatEl = () => document.getElementById('panel-chat');
+const anchorEl = () => document.getElementById('chat-anchor');
+const appendChat = (div) => { chatEl().insertBefore(div, anchorEl()); anchorEl().scrollIntoView(false); };
+const scrollChat = () => { anchorEl().scrollIntoView(false); };
 
 // ══════════════════════════════════════
 // AUTO JOIN ROOM
@@ -299,6 +329,7 @@ socket.on('joinOk', ({ username, isAdmin }) => {
   myName = username;
   myIsAdmin = isAdmin;
   makeTile(myId, username, null, true);
+  document.getElementById('myNameDisplay').textContent = username;
   document.getElementById('chatInp').focus();
   setLang(currentLang);
 });
@@ -315,12 +346,12 @@ socket.on('kicked', () => {
 // ══════════════════════════════════════
 socket.on('system', ({text,event,count}) => {
   let msg = '';
-  const ev = { joined:'sysJoined',left:'sysLeft',ytbAdded:'sysYtbAdded',ytbRemoved:'sysYtbRemoved',ytbNext:'sysYtbNext',ytbPrev:'sysYtbPrev',ytbSelect:'sysYtbSelect',ytbInvalid:'sysYtbInvalid',ytbFull:'sysYtbFull',kicked:'sysKicked' };
+  const ev = { joined:'sysJoined',left:'sysLeft',ytbAdded:'sysYtbAdded',ytbRemoved:'sysYtbRemoved',ytbNext:'sysYtbNext',ytbPrev:'sysYtbPrev',ytbSelect:'sysYtbSelect',ytbInvalid:'sysYtbInvalid',ytbFull:'sysYtbFull',kicked:'sysKicked',renamed:'sysRenamed' };
   const needsName = ['joined','left','ytbAdded','ytbRemoved','ytbSelect','kicked'];
-  msg = (needsName.includes(event) ? `${esc(text)} ` : '') + t(ev[event]||event);
+  msg = (needsName.includes(event) ? `${esc(text)} ` : (event==='renamed' ? `${esc(text)} ` : '')) + (event==='renamed' ? '' : t(ev[event]||event));
   const div = document.createElement('div'); div.className='sys-msg';
   div.innerHTML = msg + ` <span style="color:var(--muted)">[${count} ${t('online')}]</span>`;
-  document.getElementById('panel-chat').appendChild(div); scrollChat();
+  appendChat(div);
 });
 
 // ══════════════════════════════════════
@@ -486,7 +517,7 @@ socket.on('message',({username,text,time,id})=>{
   const isOwn=id===socket.id;
   const div=document.createElement('div');div.className='msg '+(isOwn?'own':'other');
   div.innerHTML=`<div class="msg-hd"><span class="msg-name">${esc(username)}</span><span class="msg-time">${time}</span></div><div class="msg-text">${esc(text)}</div>`;
-  document.getElementById('panel-chat').appendChild(div);scrollChat();
+  appendChat(div);
 });
 socket.on('userList',(list)=>{
   const ul=document.getElementById('user-list');ul.innerHTML='';
@@ -505,7 +536,44 @@ function kickUser(targetId) {
   if (confirm('Expulser cet utilisateur ?')) socket.emit('kick', targetId);
 }
 
-function sendChat(){const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;socket.emit('message',text);inp.value='';inp.focus();}
+// ══════════════════════════════════════
+// RENAME
+// ══════════════════════════════════════
+function openRename() {
+  const modal = document.getElementById('rename-modal');
+  const inp = document.getElementById('renameInp');
+  document.getElementById('renameErr').textContent = '';
+  inp.value = myName || '';
+  modal.classList.add('open');
+  inp.focus(); inp.select();
+}
+function closeRename() { document.getElementById('rename-modal').classList.remove('open'); }
+function submitRename() {
+  const inp = document.getElementById('renameInp');
+  const err = document.getElementById('renameErr');
+  const val = inp.value.trim();
+  if (val.length < 2 || val.length > 20) { err.textContent = '2 à 20 caractères.'; return; }
+  socket.emit('changeName', val);
+}
+document.getElementById('renameInp').onkeydown = e => {
+  if (e.key === 'Enter') submitRename();
+  if (e.key === 'Escape') closeRename();
+};
+document.getElementById('rename-modal').onclick = e => { if (e.target === e.currentTarget) closeRename(); };
+
+socket.on('renameOk', (newName) => {
+  myName = newName;
+  document.getElementById('myNameDisplay').textContent = newName;
+  // Mettre à jour le tile local
+  const nm = document.querySelector(`#tile-${myId} .tile-name`);
+  if (nm) nm.textContent = newName + ' (toi)';
+  closeRename();
+});
+socket.on('renameErr', (msg) => {
+  document.getElementById('renameErr').textContent = msg;
+});
+
+const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;socket.emit('message',text);inp.value='';inp.focus();}
 document.querySelector('.send-btn').onclick=sendChat;
 document.getElementById('chatInp').onkeydown=e=>{if(e.key==='Enter')sendChat();};
 

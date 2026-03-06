@@ -28,6 +28,22 @@ function extractYouTubeId(url) {
   return m ? m[1] : null;
 }
 
+function normalizeName(n) {
+  return n.toLowerCase()
+    .replace(/[l|1!]/g, 'i')
+    .replace(/[0@]/g, 'o')
+    .replace(/[3]/g, 'e')
+    .replace(/[5$]/g, 's')
+    .replace(/[4]/g, 'a')
+    .replace(/\s+/g, '');
+}
+
+function isNameTaken(room, socketId, name) {
+  const norm = normalizeName(name);
+  return Object.entries(room.users).some(([id, u]) => id !== socketId && normalizeName(u.username) === norm);
+}
+
+
 function getRoom(name) {
   if (!rooms[name]) {
     rooms[name] = {
@@ -152,10 +168,33 @@ io.on('connection', (socket) => {
     } catch (err) { console.error('videoControl error:', err); }
   });
 
+  socket.on('changeName', (newName) => {
+    try {
+      if (!currentRoom) return;
+      const room = rooms[currentRoom];
+      if (!room?.users[socket.id]) return;
+
+      const trimmed = newName.trim();
+      if (trimmed.length < 2 || trimmed.length > 20) {
+        socket.emit('renameErr', '2 à 20 caractères.'); return;
+      }
+      if (isNameTaken(room, socket.id, trimmed)) {
+        socket.emit('renameErr', 'Pseudo déjà utilisé (ou trop similaire).'); return;
+      }
+
+      const oldName = room.users[socket.id].username;
+      room.users[socket.id].username = trimmed;
+      socket.emit('renameOk', trimmed);
+      io.to(currentRoom).emit('system', {
+        text: `${oldName} → ${trimmed}`, event: 'renamed', count: Object.keys(room.users).length
+      });
+      broadcastUserList(currentRoom);
+    } catch (err) { console.error('changeName error:', err); }
+  });
+
+
   socket.on('kick', (targetId) => {
     if (!currentRoom) return;
-    const room = rooms[currentRoom];
-    if (!room?.users[socket.id]?.isAdmin) return;
     const target = room.users[targetId];
     if (!target) return;
     io.to(targetId).emit('kicked');
