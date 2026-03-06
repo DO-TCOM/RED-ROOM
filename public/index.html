@@ -335,9 +335,15 @@ socket.on('system', ({text,event,count}) => {
 // ══════════════════════════════════════
 // YOUTUBE
 // ══════════════════════════════════════
-function onYouTubeIframeAPIReady() {}
+let ytApiReady = false;
+let ytPendingLoad = null;
+function onYouTubeIframeAPIReady() {
+  ytApiReady = true;
+  if (ytPendingLoad) { loadYTVideo(...ytPendingLoad); ytPendingLoad = null; }
+}
 
 function loadYTVideo(videoId, startTime, autoPlay) {
+  if (!ytApiReady) { ytPendingLoad = [videoId, startTime, autoPlay]; return; }
   document.getElementById('yt-empty').style.display='none';
   document.getElementById('btnPlay').disabled=false;
   document.getElementById('btnPrev').disabled=ytCurrentIndex<=0;
@@ -441,16 +447,37 @@ async function getMedia(){
 document.getElementById('btnCam').onclick=async()=>{videoOn=!videoOn;await getMedia();};
 document.getElementById('btnMic').onclick=async()=>{micOn=!micOn;await getMedia();};
 
-function createPC(peerId,peerName){
-  if(peers[peerId])return peers[peerId].pc;
-  const pc=new RTCPeerConnection(ICE);peers[peerId]={pc,stream:new MediaStream()};
-  if(localStream)localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
-  pc.ontrack=({track})=>{peers[peerId].stream.addTrack(track);const v=document.getElementById('vid-'+peerId);if(v)v.srcObject=peers[peerId].stream;};
-  pc.onicecandidate=({candidate})=>{if(candidate)socket.emit('webrtc-ice',{to:peerId,candidate});};
-  makeTile(peerId,peerName,peers[peerId].stream,false);return pc;
+function createPC(peerId, peerName) {
+  if (peers[peerId]) return peers[peerId].pc;
+  const pc = new RTCPeerConnection(ICE);
+  peers[peerId] = { pc, stream: new MediaStream() };
+  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  pc.ontrack = ({ track }) => {
+    peers[peerId].stream.addTrack(track);
+    const v = document.getElementById('vid-' + peerId);
+    if (v) v.srcObject = peers[peerId].stream;
+  };
+  pc.onicecandidate = ({ candidate }) => { if (candidate) socket.emit('webrtc-ice', { to: peerId, candidate }); };
+  // Renegociation quand un track est ajouté après connexion (ex: activation cam)
+  pc.onnegotiationneeded = async () => {
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit('webrtc-offer', { to: peerId, offer });
+    } catch (e) { console.error('onnegotiationneeded error:', e); }
+  };
+  makeTile(peerId, peerName, peers[peerId].stream, false);
+  return pc;
 }
-async function callPeer(peerId,peerName){const pc=createPC(peerId,peerName);const offer=await pc.createOffer();await pc.setLocalDescription(offer);socket.emit('webrtc-offer',{to:peerId,offer});}
-socket.on('existingUsers',users=>users.forEach(u=>callPeer(u.id,u.username)));
+async function callPeer(peerId, peerName) {
+  const pc = createPC(peerId, peerName);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('webrtc-offer', { to: peerId, offer });
+}
+socket.on('existingUsers', users => users.forEach(u => callPeer(u.id, u.username)));
+// Nouveau visiteur → créer son tile et l'appeler
+socket.on('userJoined', ({ id, username }) => { if (!peers[id]) callPeer(id, username); });
 socket.on('webrtc-offer',async({from,fromName,offer})=>{const pc=createPC(from,fromName);await pc.setRemoteDescription(new RTCSessionDescription(offer));const ans=await pc.createAnswer();await pc.setLocalDescription(ans);socket.emit('webrtc-answer',{to:from,answer:ans});});
 socket.on('webrtc-answer',async({from,answer})=>{const p=peers[from];if(p)await p.pc.setRemoteDescription(new RTCSessionDescription(answer));});
 socket.on('webrtc-ice',async({from,candidate})=>{const p=peers[from];if(p&&candidate)try{await p.pc.addIceCandidate(new RTCIceCandidate(candidate));}catch(e){}});
