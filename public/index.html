@@ -573,7 +573,7 @@ socket.on('renameErr', (msg) => {
   document.getElementById('renameErr').textContent = msg;
 });
 
-const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;socket.emit('message',text);inp.value='';inp.focus();}
+function sendChat(){const inp=document.getElementById('chatInp');const text=inp.value.trim();if(!text)return;socket.emit('message',text);inp.value='';inp.focus();}
 document.querySelector('.send-btn').onclick=sendChat;
 document.getElementById('chatInp').onkeydown=e=>{if(e.key==='Enter')sendChat();};
 
