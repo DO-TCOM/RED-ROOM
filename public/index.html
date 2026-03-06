@@ -301,15 +301,6 @@ socket.on('joinOk', ({ username, isAdmin }) => {
   makeTile(myId, username, null, true);
   document.getElementById('chatInp').focus();
   setLang(currentLang);
-  // Désactive les contrôles YT pour non-admin
-  if (!myIsAdmin) {
-    ['btnPlay','btnPrev','btnNext'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.disabled = true; el.style.opacity = '.2'; el.style.cursor = 'not-allowed'; }
-    });
-    document.getElementById('ytProgress').style.pointerEvents = 'none';
-    document.getElementById('ytProgress').style.cursor = 'default';
-  }
 });
 socket.on('joinError', (code) => {
   console.error('Join error:', code);
@@ -353,18 +344,22 @@ function loadYTVideo(videoId, startTime, autoPlay) {
     ytPlayer.loadVideoById({videoId,startSeconds:startTime||0});
     setTimeout(()=>{if(!autoPlay)ytPlayer.pauseVideo();isSyncingFromServer=false;},1200);
   } else {
+    isSyncingFromServer = true;
     const wrap=document.getElementById('yt-player-wrap');
     const div=document.createElement('div'); div.id='yt-iframe'; wrap.appendChild(div);
     ytPlayer = new YT.Player('yt-iframe',{
       videoId, playerVars:{autoplay:autoPlay?1:0,controls:0,disablekb:1,rel:0,modestbranding:1,start:Math.floor(startTime||0)},
       events:{
-        onReady:()=>startProgressTimer(),
-        onStateChange:(e)=>{
-          if(isSyncingFromServer) return;
-          if(e.data===YT.PlayerState.PLAYING) socket.emit('videoControl',{action:'play',value:ytPlayer.getCurrentTime()});
-          else if(e.data===YT.PlayerState.PAUSED) socket.emit('videoControl',{action:'pause',value:ytPlayer.getCurrentTime()});
-          else if(e.data===YT.PlayerState.ENDED&&ytCurrentIndex<ytPlaylist.length-1) videoControl('next');
+        onReady: () => { isSyncingFromServer = false; startProgressTimer(); },
+        onStateChange: (e) => {
+          // Met à jour le bouton play/pause localement uniquement
           document.getElementById('btnPlay').textContent = e.data===YT.PlayerState.PLAYING?'⏸':'▶';
+          // Seulement le client qui a initié (via un clic UI) envoie au serveur
+          // → géré par togglePlay() et seekClick() directement
+          // Passage à la vidéo suivante quand terminée (tout le monde peut déclencher mais le serveur déduplique)
+          if (!isSyncingFromServer && e.data===YT.PlayerState.ENDED && ytCurrentIndex < ytPlaylist.length-1) {
+            videoControl('next');
+          }
         }
       }
     });
