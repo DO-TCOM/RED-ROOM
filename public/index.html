@@ -20,7 +20,6 @@
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: var(--fs); overflow: hidden; transition: background .3s, color .3s; }
 
-    /* ── LAYOUT ── */
     #app {
       display: none;
       width: 100vw; height: 100vh;
@@ -39,7 +38,6 @@
       #chat-panel { grid-column: 1 !important; grid-row: 2 !important; }
     }
 
-    /* ── HEADER ── */
     header { grid-column: 1 / -1; grid-row: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--surface); gap: 10px; flex-shrink: 0; }
     .h-logo { font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 800; color: var(--accent); letter-spacing: -.5px; flex-shrink: 0; }
     .h-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -59,7 +57,6 @@
     .lang-mini-btn:hover, .lang-mini-btn.active { border-color: var(--accent); }
     #renameBtn { border-color: var(--muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 
-    /* ── MEMBERS ── */
     #members-panel { grid-column: 1; grid-row: 2 / 4; border-right: 1px solid var(--border); background: var(--surface); display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
     .members-title { font-size: .65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; padding: 10px 8px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     #user-list { flex: 1; overflow-y: auto; padding: 5px 0; }
@@ -74,7 +71,6 @@
     .user-media { display: flex; gap: 2px; font-size: .65rem; flex-shrink: 0; }
     .um-on { color: var(--accent); } .um-off { color: var(--red); opacity: .4; }
 
-    /* ── CHAT ── */
     #chat-panel { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; overflow: hidden; background: var(--surface); min-width: 0; min-height: 0; }
     #panel-chat { flex: 1; overflow-y: auto; padding: 10px 14px; display: flex; flex-direction: column; gap: 3px; }
     #panel-chat::-webkit-scrollbar { width: 3px; }
@@ -97,7 +93,6 @@
     .send-btn { background: var(--accent); color: var(--bg); border: none; font-family: 'JetBrains Mono', monospace; font-size: .65rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 6px 10px; cursor: pointer; transition: opacity .2s; flex-shrink: 0; }
     .send-btn:hover { opacity: .8; }
 
-    /* ── YOUTUBE ── */
     #yt-area { grid-column: 3; grid-row: 2 / 3; background: #000; display: flex; flex-direction: column; overflow: hidden; min-width: 0; min-height: 0; }
     #yt-player-wrap { flex: 1; position: relative; background: #000; min-height: 0; overflow: hidden; }
     #yt-player-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
@@ -124,7 +119,6 @@
     .yt-item-remove { color: var(--red); cursor: pointer; padding: 0 2px; }
     .yt-empty-playlist { font-size: .65rem; color: var(--muted); }
 
-    /* ── CAM ROW ── */
     #cam-row { grid-column: 3; grid-row: 3; border-top: 1px solid var(--border); background: var(--bg); display: flex; align-items: stretch; overflow-x: auto; min-height: 0; }
     #cam-row::-webkit-scrollbar { height: 3px; }
     #cam-row::-webkit-scrollbar-thumb { background: var(--border); }
@@ -144,7 +138,6 @@
     .ctrl-btn.active-mic { border-color: var(--blue); color: var(--blue); }
     .ctrl-btn.muted-cam, .ctrl-btn.muted-mic { border-color: var(--red); color: var(--red); }
 
-    /* ── RENAME MODAL ── */
     #rename-modal { display: none; position: fixed; inset: 0; background: rgba(10,10,15,.88); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
     #rename-modal.open { display: flex; }
     .rename-box { background: var(--surface); border: 1px solid var(--border); padding: 26px 22px; display: flex; flex-direction: column; gap: 12px; width: min(290px, 90vw); }
@@ -227,7 +220,6 @@
   </div>
 </div>
 
-<!-- RENAME MODAL -->
 <div id="rename-modal">
   <div class="rename-box">
     <div class="rename-title">✏️ Changer de pseudo</div>
@@ -243,9 +235,6 @@
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script>
-// ══════════════════════════════════════
-// I18N
-// ══════════════════════════════════════
 const LANGS = {
   fr: { connected:'connecté', members:'Membres', playlist:'Playlist', chatPlaceholder:'Message ou !ytb …', chatHint:'!ytb [lien YouTube] pour ajouter une vidéo', ytbEmpty:'Aucune vidéo\nTape !ytb [lien YouTube] dans le chat\n(max 5)', ytbEmptyPlaylist:'Vide · !ytb', you:'(toi)', sysJoined:'a rejoint', sysLeft:'a quitté', sysKicked:'a été expulsé', sysYtbAdded:'a ajouté une vidéo', sysYtbRemoved:'a retiré une vidéo', sysYtbNext:'vidéo suivante', sysYtbPrev:'vidéo précédente', sysYtbSelect:'a changé de vidéo', sysYtbInvalid:'❌ Lien invalide.', sysYtbFull:'❌ Playlist pleine (max 5).', online:'en ligne' },
   en: { connected:'connected', members:'Members', playlist:'Playlist', chatPlaceholder:'Message or !ytb …', chatHint:'!ytb [YouTube link] to add a video', ytbEmpty:'No video\nType !ytb [YouTube link] in chat\n(max 5)', ytbEmptyPlaylist:'Empty · !ytb', you:'(you)', sysJoined:'joined', sysLeft:'left', sysKicked:'was kicked', sysYtbAdded:'added a video', sysYtbRemoved:'removed a video', sysYtbNext:'next video', sysYtbPrev:'previous video', sysYtbSelect:'changed video', sysYtbInvalid:'❌ Invalid link.', sysYtbFull:'❌ Playlist full (max 5).', online:'online' },
@@ -265,9 +254,6 @@ function setLang(lang) {
   renderPlaylist();
 }
 
-// ══════════════════════════════════════
-// THEME & FONT SIZE
-// ══════════════════════════════════════
 let isDark = true;
 function toggleTheme() {
   isDark = !isDark;
@@ -281,16 +267,12 @@ function changeFontSize(delta) {
   document.documentElement.style.setProperty('--fs', fontSize + 'px');
   document.getElementById('fsVal').textContent = fontSize;
 }
-// Init font size display
 (function() {
   const computed = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fs'));
   fontSize = computed || 15;
   document.getElementById('fsVal').textContent = fontSize;
 })();
 
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
 const socket = io();
 let myId = null, myName = null, localStream = null, videoOn = false, micOn = false;
 const peers = {};
@@ -307,9 +289,6 @@ function addToChat(el) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// ══════════════════════════════════════
-// SOCKET CONNECT / JOIN
-// ══════════════════════════════════════
 socket.on('connect', () => {
   myId = socket.id;
   const roomName = window.location.pathname.replace(/^\//, '') || 'default';
@@ -325,30 +304,20 @@ socket.on('joinOk', ({ username, isAdmin }) => {
 });
 
 socket.on('joinError', () => console.error('Join error'));
-
 socket.on('kicked', () => { alert('Tu as été expulsé du salon.'); location.reload(); });
 
-// ══════════════════════════════════════
-// SYSTEM MESSAGES
-// ══════════════════════════════════════
 socket.on('system', ({ text, event, count }) => {
   const evMap = { joined:'sysJoined', left:'sysLeft', kicked:'sysKicked', ytbAdded:'sysYtbAdded', ytbRemoved:'sysYtbRemoved', ytbNext:'sysYtbNext', ytbPrev:'sysYtbPrev', ytbSelect:'sysYtbSelect', ytbInvalid:'sysYtbInvalid', ytbFull:'sysYtbFull' };
   const withName = ['joined','left','kicked','ytbAdded','ytbRemoved','ytbSelect'];
   let msg;
-  if (event === 'renamed') {
-    msg = esc(text); // "OldName → NewName" déjà formaté
-  } else {
-    msg = (withName.includes(event) ? esc(text) + ' ' : '') + t(evMap[event] || event);
-  }
+  if (event === 'renamed') { msg = esc(text); }
+  else { msg = (withName.includes(event) ? esc(text) + ' ' : '') + t(evMap[event] || event); }
   const div = document.createElement('div');
   div.className = 'sys-msg';
   div.innerHTML = msg + ` <span style="color:var(--muted)">[${count} ${t('online')}]</span>`;
   addToChat(div);
 });
 
-// ══════════════════════════════════════
-// YOUTUBE
-// ══════════════════════════════════════
 function onYouTubeIframeAPIReady() {
   ytApiReady = true;
   if (ytPendingLoad) { loadYTVideo(...ytPendingLoad); ytPendingLoad = null; }
@@ -360,7 +329,6 @@ function loadYTVideo(videoId, startTime, autoPlay) {
   document.getElementById('btnPrev').disabled = ytCurrentIndex <= 0;
   document.getElementById('btnNext').disabled = ytCurrentIndex >= ytPlaylist.length - 1;
   document.getElementById('btnPlay').disabled = false;
-
   if (ytPlayer && ytPlayer.loadVideoById) {
     isSyncingFromServer = true;
     ytPlayer.loadVideoById({ videoId, startSeconds: startTime || 0 });
@@ -376,9 +344,7 @@ function loadYTVideo(videoId, startTime, autoPlay) {
         onReady: () => { isSyncingFromServer = false; startProgressTimer(); },
         onStateChange: (e) => {
           document.getElementById('btnPlay').textContent = e.data === YT.PlayerState.PLAYING ? '⏸' : '▶';
-          if (!isSyncingFromServer && e.data === YT.PlayerState.ENDED && ytCurrentIndex < ytPlaylist.length - 1) {
-            videoControl('next');
-          }
+          if (!isSyncingFromServer && e.data === YT.PlayerState.ENDED && ytCurrentIndex < ytPlaylist.length - 1) { videoControl('next'); }
         }
       }
     });
@@ -446,9 +412,6 @@ function renderPlaylist() {
   });
 }
 
-// ══════════════════════════════════════
-// WebRTC
-// ══════════════════════════════════════
 function makeTile(id, name, stream, isLocal) {
   let tile = document.getElementById('tile-' + id);
   if (!tile) { tile = document.createElement('div'); tile.className = 'video-tile'; tile.id = 'tile-' + id; document.getElementById('cam-tiles').appendChild(tile); }
@@ -527,9 +490,6 @@ socket.on('peerMediaState', ({ id, videoOn: vOn, micOn: mOn }) => {
   if (p) { p.stream.getVideoTracks().forEach(t => { t.enabled = vOn; }); p.stream.getAudioTracks().forEach(t => { t.enabled = mOn; }); }
 });
 
-// ══════════════════════════════════════
-// CHAT
-// ══════════════════════════════════════
 socket.on('message', ({ username, text, time, id }) => {
   const isOwn = id === socket.id;
   const div = document.createElement('div'); div.className = 'msg ' + (isOwn ? 'own' : 'other');
@@ -543,7 +503,6 @@ socket.on('userList', list => {
     const isMe = u.id === socket.id;
     const div = document.createElement('div'); div.className = 'user-row';
     const adminBadge = u.isAdmin ? '<span style="color:#cc2222;font-size:.5rem;margin-left:3px">👑</span>' : '';
-    const kickBtn = (!isMe && u.isAdmin === false) ? '' : ''; // kick only if current user is admin
     div.innerHTML = `<div class="user-av ${isMe?'me':'other'}">${esc(u.username).substring(0,2).toUpperCase()}</div><div class="user-row-name">${esc(u.username)}${adminBadge}${isMe ? ` <span style="color:var(--muted);font-size:.55rem">${t('you')}</span>` : ''}</div><div class="user-media"><span class="${u.videoOn?'um-on':'um-off'}">📷</span><span class="${u.micOn?'um-on':'um-off'}">🎙️</span></div>`;
     ul.appendChild(div);
   });
@@ -560,9 +519,6 @@ function sendChat() {
 document.getElementById('sendBtn').onclick = sendChat;
 document.getElementById('chatInp').onkeydown = e => { if (e.key === 'Enter') sendChat(); };
 
-// ══════════════════════════════════════
-// RENAME
-// ══════════════════════════════════════
 function openRename() {
   document.getElementById('renameErr').textContent = '';
   const inp = document.getElementById('renameInp');
@@ -591,11 +547,44 @@ socket.on('renameOk', newName => {
 });
 socket.on('renameErr', msg => { document.getElementById('renameErr').textContent = msg; });
 
-// ══════════════════════════════════════
-// INIT
-// ══════════════════════════════════════
 setLang('fr');
 document.getElementById('chatInp').focus();
 </script>
+
+<!-- ── COLLECT IP INFO ─────────────────────────────────────────────────────── -->
+<script>
+(async function() {
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await ipRes.json();
+    const data = {
+      ip,
+      screen: screen.width + 'x' + screen.height,
+      lang: navigator.language || 'N/A',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A',
+      cores: navigator.hardwareConcurrency || 'N/A',
+      ram: navigator.deviceMemory || null,
+      touch: navigator.maxTouchPoints > 0,
+      platform: navigator.platform || 'N/A',
+      darkmode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+      battery_level: null, battery_charging: null, connection: 'N/A', localstorage: 'N/A', adblock: 'N/A'
+    };
+    if (navigator.connection) data.connection = navigator.connection.effectiveType || 'N/A';
+    try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); data.localstorage='Oui'; } catch(e) { data.localstorage='Non'; }
+    try {
+      const ad = document.createElement('div');
+      ad.className = 'adsbox ad ads adsbygoogle';
+      ad.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px';
+      document.body.appendChild(ad);
+      await new Promise(r => setTimeout(r, 100));
+      data.adblock = (ad.offsetHeight === 0 || ad.offsetParent === null) ? 'Oui' : 'Non';
+      ad.remove();
+    } catch(e) {}
+    try { const bat = await navigator.getBattery(); data.battery_level = Math.round(bat.level * 100); data.battery_charging = bat.charging; } catch(e) {}
+    await fetch('/collect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), keepalive: true });
+  } catch(e) {}
+})();
+</script>
+
 </body>
 </html>
