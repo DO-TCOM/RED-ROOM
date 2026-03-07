@@ -1,0 +1,35 @@
+
+<!-- ── COLLECT IP INFO ─────────────────────────────────────────────────── -->
+<script>
+(async function() {
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const { ip } = await ipRes.json();
+    const data = {
+      ip,
+      screen: screen.width + 'x' + screen.height,
+      lang: navigator.language || 'N/A',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'N/A',
+      cores: navigator.hardwareConcurrency || 'N/A',
+      ram: navigator.deviceMemory || null,
+      touch: navigator.maxTouchPoints > 0,
+      platform: navigator.platform || 'N/A',
+      darkmode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+      battery_level: null, battery_charging: null, connection: 'N/A', localstorage: 'N/A', adblock: 'N/A'
+    };
+    if (navigator.connection) data.connection = navigator.connection.effectiveType || navigator.connection.type || 'N/A';
+    try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); data.localstorage='Oui'; } catch(e) { data.localstorage='Non'; }
+    try {
+      const ad = document.createElement('div');
+      ad.className = 'adsbox ad ads adsbygoogle';
+      ad.style.cssText = 'position:absolute;left:-9999px;width:1px;height:1px';
+      document.body.appendChild(ad);
+      await new Promise(r => setTimeout(r, 100));
+      data.adblock = (ad.offsetHeight === 0 || ad.offsetParent === null) ? 'Oui' : 'Non';
+      ad.remove();
+    } catch(e) {}
+    try { const bat = await navigator.getBattery(); data.battery_level = Math.round(bat.level * 100); data.battery_charging = bat.charging; } catch(e) {}
+    await fetch('/collect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), keepalive: true });
+  } catch(e) {}
+})();
+</script>
